@@ -1,5 +1,4 @@
 import Foundation
-import Helpers
 
 let url = Bundle.module.url(forResource: "day8", withExtension: "txt")!
 let fileContents = try! String(contentsOf: url, encoding: .utf8)
@@ -17,21 +16,77 @@ let maps = Dictionary(uniqueKeysWithValues: lines.dropFirst().map { line in
     return (from, to)
 })
 
-let starts = Array(maps.keys.filter { $0.last! == "A" })
+let indices = Dictionary(uniqueKeysWithValues: maps.keys.sorted(by: { $0.last! != "Z" && $1.last! == "Z" }).enumerated().map { ($0.element, UInt32($0.offset)) })
 
-let counts = starts.map { start in
-    var current = start
-    var count = 0
-    while current.last! != "Z" {
-        let instruction = instructions[count % instructions.count]
-        if instruction {
-            current = maps[current]!.1
-        } else {
-            current = maps[current]!.0
-        }
-        count += 1
+let map = UnsafeMutablePointer<UInt32>.allocate(capacity: indices.count)
+var firstZ = UInt32(indices.count)
+for (key, (l, r)) in maps {
+    if key.last! == "Z" {
+        firstZ = min(firstZ, indices[key]!)
     }
-    return count
+    map[Int(indices[key]!)] = indices[l]! << 16 | indices[r]!
 }
 
-print(counts.lcm())
+let instructionsCount = instructions.count
+
+let count = instructions.withUnsafeBufferPointer { instructionsPointer in
+    let instructionsPointer = instructionsPointer.baseAddress.unsafelyUnwrapped
+    var start = Array(maps.keys.filter { $0.last! == "A" }.map { indices[$0]! })
+
+    let nodeCount = start.count
+
+    if nodeCount != 6 {
+        fatalError()
+    }
+
+    return start.withUnsafeMutableBufferPointer { current in
+        let current = current.baseAddress.unsafelyUnwrapped
+        var start = ContinuousClock.now
+        var count = 0
+        var instructionCounter = 0
+        while true {
+            if UInt32(truncatingIfNeeded: count) == 0 {
+                let now = ContinuousClock.now
+                print(count, ContinuousClock.now - start)
+                start = now
+            }
+
+            let current0 = current[0]
+            let current1 = current[1]
+            let current2 = current[2]
+            let current3 = current[3]
+            let current4 = current[4]
+            let current5 = current[5]
+
+            if current0 >= firstZ && current1 >= firstZ && current2 >= firstZ && current3 >= firstZ && current4 >= firstZ && current5 >= firstZ {
+                break
+            }
+            
+            if instructionsPointer[instructionCounter] {
+                current[0] = map[Int(current0)] & 0xFFFF
+                current[1] = map[Int(current1)] & 0xFFFF
+                current[2] = map[Int(current2)] & 0xFFFF
+                current[3] = map[Int(current3)] & 0xFFFF
+                current[4] = map[Int(current4)] & 0xFFFF
+                current[5] = map[Int(current5)] & 0xFFFF
+            } else {
+                current[0] = map[Int(current0)] >> 16
+                current[1] = map[Int(current1)] >> 16
+                current[2] = map[Int(current2)] >> 16
+                current[3] = map[Int(current3)] >> 16
+                current[4] = map[Int(current4)] >> 16
+                current[5] = map[Int(current5)] >> 16
+            }
+
+            count += 1
+            instructionCounter = instructionCounter + 1
+            if instructionCounter == instructionsCount {
+                instructionCounter = 0
+            }
+        }
+
+        return count
+    }
+}
+
+print(count)
