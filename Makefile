@@ -5,7 +5,7 @@ DAY ?= $(shell date +"%d" | bc)
 ifdef AOC_YEAR
 YEAR := $(AOC_YEAR)
 else
-YEAR := 2024
+YEAR := 2023
 endif
 
 ifdef SWIFT_EXECUTABLE
