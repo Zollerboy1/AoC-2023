@@ -16,21 +16,27 @@ let package = Package(
     },
     dependencies: [
         .package(url: "https://github.com/apple/swift-algorithms.git", from: "1.2.0"),
+        .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-numerics.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-standard-library-preview.git", from: "0.0.3"),
         .package(url: "https://github.com/davecom/SwiftGraph.git", from: "3.1.0"),
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.3.0"),
     ],
     targets: [
+        .target(name: "Helpers")
     ] + (1...25).map {
         .executableTarget(
             name: "Day\($0)",
             dependencies: [
                 .product(name: "Algorithms", package: "swift-algorithms"),
+                .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 .product(name: "Collections", package: "swift-collections"),
                 .product(name: "Numerics", package: "swift-numerics"),
+                .product(name: "StandardLibraryPreview", package: "swift-standard-library-preview"),
                 "SwiftGraph",
-                "BigInt"
+                "BigInt",
+                "Helpers"
             ],
             resources: [.copy("Resources/day\($0).txt")],
             swiftSettings: [

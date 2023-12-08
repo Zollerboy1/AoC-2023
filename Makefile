@@ -22,14 +22,11 @@ EXECUTABLE_PATH := .build/debug/Day$(DAY)
 SWIFT_FLAGS := -c debug
 endif
 
-.PHONY: getinput
-getinput:
+getinput: 
 	@mkdir -p Sources/Day$(DAY)/Resources
 	@curl -Ssl "https://adventofcode.com/$(YEAR)/day/$(DAY)/input" \
 	  -A "getinput by Zollerboy1" \
 	  -H "cookie: session=$(AOC_SESSION)" > Sources/Day$(DAY)/Resources/day$(DAY).txt
-
-Sources/Day$(DAY)/Resources/day$(DAY).txt: getinput
 
 $(EXECUTABLE_PATH): Sources/Day$(DAY)/main.swift Sources/Day$(DAY)/Resources/day$(DAY).txt Package.swift
 	$(SWIFT) build $(SWIFT_FLAGS) --product Day$(DAY)
